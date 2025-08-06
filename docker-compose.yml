@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  wails-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wails-dev:latest
+    container_name: wails-development
+    volumes:
+      # Mount your Wails project
+      - .:/app
+      # Mount Go cache for faster builds
+      - go-cache:/home/wailsdev/go
+      # Mount X11 socket for GUI (if needed)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Mount host home for Distrobox compatibility
+      - ${HOME}:/home/wailsdev/host-home:ro
+    environment:
+      # X11 display for GUI applications
+      - DISPLAY=${DISPLAY:-:0}
+      # WebKit tags for Ubuntu 24.04
+      - WEBKIT_TAGS=-tags webkit2_41
+      # Go environment
+      - GOPATH=/home/wailsdev/go
+      - CGO_ENABLED=1
+      # Distrobox compatibility
+      - DISTROBOX_HOST_HOME=${HOME}
+      - USER=wailsdev
+      - HOME=/home/wailsdev
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    # Use host network for development
+    network_mode: host
+    # Allow GUI applications (requires X11 forwarding)
+    privileged: false
+    security_opt:
+      - seccomp:unconfined
+
+volumes:
+  go-cache:
+    driver: local 
